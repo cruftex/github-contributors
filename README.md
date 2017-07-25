@@ -3,9 +3,10 @@ Contributors Coding Exercise
 
 Solution for the New Relic coding exercise, implemented as a 
 standalone JAX-RS API running on an embedded Grizzly Jersey container.
+It features:
 
  * Validation of API parameters.
- * Cache GitHub search API results
+ * Caching of GitHub search API results
  * Retry and rate limit GitHub calls
  
 Configuration
