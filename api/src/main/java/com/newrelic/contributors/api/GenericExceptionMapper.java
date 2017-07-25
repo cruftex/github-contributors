@@ -6,6 +6,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.Collections;
 
 @Singleton
 @Provider
@@ -14,9 +15,7 @@ public class GenericExceptionMapper implements ExceptionMapper<WebApplicationExc
     @Override
     public Response toResponse(final WebApplicationException exception) {
         return Response.status(exception.getResponse().getStatus())
-                .entity(ContributorsError.builder()
-                        .message(exception.getMessage())
-                        .build())
+                .entity(Collections.singletonMap("message", exception.getMessage()))
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .build();
     }

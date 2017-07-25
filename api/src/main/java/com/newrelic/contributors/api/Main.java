@@ -46,7 +46,7 @@ public class Main {
      *
      * @return Jersey's resource configuration of the Weld application.
      */
-    private static ResourceConfig createJaxRsApp() {
+    static ResourceConfig createJaxRsApp() {
         return ResourceConfig.forApplicationClass(ContributorsApplication.class);
     }
 

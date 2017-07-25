@@ -1,6 +1,5 @@
 package com.newrelic.contributors.api;
 
-import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import java.util.HashSet;
 import java.util.Set;
@@ -8,7 +7,6 @@ import java.util.Set;
 /**
  * JAX-RS application defined as a CDI bean.
  */
-@ApplicationPath("/")
 public class ContributorsApplication extends Application {
 
     private static final Set<Class<?>> appClasses = new HashSet<>();

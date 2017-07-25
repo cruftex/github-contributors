@@ -11,7 +11,7 @@ public class ConfigurationProducer {
     @Singleton
     public Properties configuration() throws IOException {
 
-        Properties config = new Properties();
+        final Properties config = new Properties();
         config.load(ConfigurationProducer.class.getClassLoader()
                 .getResourceAsStream("contributors.properties"));
 

@@ -6,7 +6,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -16,10 +18,8 @@ public class ConstraintViolationMapper implements ExceptionMapper<ConstraintViol
     @Override
     public Response toResponse(ConstraintViolationException exception) {
 
-        final List<ContributorsError> errors = exception.getConstraintViolations().stream()
-                .map(e -> ContributorsError.builder()
-                        .message(e.getMessage())
-                        .build())
+        final List<Map> errors = exception.getConstraintViolations().stream()
+                .map(e -> Collections.singletonMap("message", e.getMessage()))
                 .collect(Collectors.toList());
 
         return Response.status(Response.Status.BAD_REQUEST)

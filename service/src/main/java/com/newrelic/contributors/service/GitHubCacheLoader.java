@@ -8,6 +8,8 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.vavr.CheckedFunction0;
 import io.vavr.control.Try;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
@@ -55,9 +57,8 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
      */
     private RateLimiterConfig rateLimiterConfig;
 
-    private Client client = ClientBuilder.newClient();
-
-    private final JsonPath path = JsonPath.compile("$.items[*]");
+    private Client client;
+    private JsonPath path;
 
     @Override
     public List load(final String key) throws CacheLoaderException {
@@ -105,9 +106,9 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
 
     private Try<Response> request(final String location, final int perPage, int page) {
 
-        final String gitHubUrl = config.getProperty("github.search.url");
+        final String searchUrl = config.getProperty("github.search.url");
 
-        return Try.of(() -> client.target(gitHubUrl)
+        return Try.of(() -> client.target(searchUrl)
                 .queryParam("q", "location:" + location)
                 .queryParam("sort", "repositories")
                 .queryParam("per_page", perPage)
@@ -151,6 +152,15 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
                 .timeoutDuration(Duration.ofMinutes(1))
                 .limitForPeriod(requestsPerMinute)
                 .build();
+
+        int timeout = Integer.parseInt(config.getProperty("github.connect.timeout.millis"));
+
+        client = ClientBuilder.newBuilder()
+                .withConfig(new ClientConfig()
+                        .property(ClientProperties.CONNECT_TIMEOUT, timeout))
+                .build();
+
+        path = JsonPath.compile("$.items[*]");
     }
 
     @PreDestroy
