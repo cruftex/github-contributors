@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Read-through GitHub cache. Always retrieves {@link Top#MAX_VALUE} elements.
+ * Read-through GitHub cache. Always retrieves {@link Top#MAX} elements.
  */
 @Singleton
 class GitHubCacheLoader implements CacheLoader<String, List> {
@@ -70,7 +70,7 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
 
         final CheckedFunction0<List> retriedResults =
                 Retry.decorateCheckedSupplier(retry,
-                        () -> retrieveTopContributors(key, Top.MAX_VALUE, 1)
+                        () -> retrieveTopContributors(key, Top.MAX, 1)
                                 .getOrElseThrow(Function.identity()));
 
         final RateLimiter limiter = RateLimiter.of("GitHub - User Search", rateLimiterConfig);
@@ -95,13 +95,12 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
         final Try<Response> response = request(location, top, page);
         final Try<InputStream> body = response.flatMapTry(this::read);
 
-        return body.mapTry(b -> (List) path.read(b))
-                .onSuccess(r -> {
-                    if (top == Top.MAX_VALUE) { // GitHub max is 100
-                        retrieveTopContributors(location, Top.MIN_VALUE, 3)
-                                .onSuccess(r::addAll);
-                    }
-                });
+        return body.mapTry(b -> (List) path.read(b)).onSuccess(r -> {
+            if (top == Top.MAX) { // GitHub max is 100
+                retrieveTopContributors(location, Top.MIN, 3)
+                        .onSuccess(r::addAll);
+            }
+        });
     }
 
     private Try<Response> request(final String location, final int perPage, int page) {
@@ -153,10 +152,11 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
                 .limitForPeriod(requestsPerMinute)
                 .build();
 
-        int timeout = Integer.parseInt(config.getProperty("github.connect.timeout.millis"));
+        int timeout = Integer.parseInt(config.getProperty("github.timeout.millis"));
 
         client = ClientBuilder.newBuilder()
                 .withConfig(new ClientConfig()
+                        .property(ClientProperties.READ_TIMEOUT, timeout)
                         .property(ClientProperties.CONNECT_TIMEOUT, timeout))
                 .build();
 

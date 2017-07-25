@@ -16,11 +16,6 @@ public class ContributorsService {
     @Inject
     private Cache<String, List> cache;
 
-    public ContributorsService() {
-    }
-
-
-
     @SuppressWarnings("unchecked")
     public List findTopContributors(final String location, final int top) {
 

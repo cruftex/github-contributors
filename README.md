@@ -19,6 +19,7 @@ Configuration
 The file [configuration.properties](service/src/main/resources/contributors.properties) 
 contains configuration properties for the application:
 
+ * `github.timeout.millis`: GitHub connection and read timeout.
  * `github.search.url`: The GitHub search endpoint.
  * `github.search.requestsPerMinute`: Requests per minute.
  * `github.retry.maxAttempts`: Max attempts on retry.
