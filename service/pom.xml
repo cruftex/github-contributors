@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-cache</artifactId>
+            <artifactId>resilience4j-ratelimiter</artifactId>
             <version>LATEST</version>
         </dependency>
     </dependencies>

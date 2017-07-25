@@ -33,12 +33,12 @@ public class CacheProducer {
                         String.class, List.class));
 
         return cache.orElseGet(() -> {
-            final int seconds = Integer.parseInt(configuration.getProperty("cache.expiry.seconds"));
+            final int seconds = Integer.parseInt(configuration.getProperty("github.cache.expiry.seconds"));
             final Duration expiry = new Duration(TimeUnit.SECONDS, seconds);
 
-            final MutableConfiguration config = new MutableConfiguration()
+            final MutableConfiguration<String, List> config = new MutableConfiguration<>()
                     .setExpiryPolicyFactory(CreatedExpiryPolicy.factoryOf(expiry))
-                    .setCacheLoaderFactory(new FactoryBuilder.SingletonFactory<>(loader))
+                    .setCacheLoaderFactory(new FactoryBuilder.SingletonFactory(loader))
                     .setTypes(String.class, List.class)
                     .setReadThrough(true);
 

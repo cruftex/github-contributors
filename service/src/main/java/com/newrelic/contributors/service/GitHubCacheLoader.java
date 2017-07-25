@@ -2,6 +2,8 @@ package com.newrelic.contributors.service;
 
 import com.jayway.jsonpath.JsonPath;
 import com.newrelic.contributors.domain.Top;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.vavr.CheckedFunction0;
@@ -31,6 +33,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * Read-through GitHub cache. Always retrieves {@link Top#MAX_VALUE} elements.
+ */
 @Singleton
 class GitHubCacheLoader implements CacheLoader<String, List> {
 
@@ -38,9 +43,17 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
     private Logger logger;
 
     @Inject
-    private Properties configuration;
+    private Properties config;
 
+    /**
+     * GitHub retry configuration.
+     */
     private RetryConfig retryConfig;
+
+    /**
+     * GitHub rate limit configuration.
+     */
+    private RateLimiterConfig rateLimiterConfig;
 
     private Client client = ClientBuilder.newClient();
 
@@ -59,7 +72,9 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
                         () -> retrieveTopContributors(key, Top.MAX_VALUE, 1)
                                 .getOrElseThrow(Function.identity()));
 
-        return Try.of(retriedResults)
+        final RateLimiter limiter = RateLimiter.of("GitHub - User Search", rateLimiterConfig);
+
+        return Try.of(RateLimiter.decorateCheckedSupplier(limiter, retriedResults))
                 .onFailure(t -> logger.warn(t.getMessage()))
                 .getOrElseThrow(t -> t instanceof RuntimeException ?
                         (RuntimeException) t : new ServiceUnavailableException(t.getMessage()));
@@ -81,15 +96,18 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
 
         return body.mapTry(b -> (List) path.read(b))
                 .onSuccess(r -> {
-                    if (top == 150) { // GitHub max is 100
-                        retrieveTopContributors(location, 50, 3)
+                    if (top == Top.MAX_VALUE) { // GitHub max is 100
+                        retrieveTopContributors(location, Top.MIN_VALUE, 3)
                                 .onSuccess(r::addAll);
                     }
                 });
     }
 
     private Try<Response> request(final String location, final int perPage, int page) {
-        return Try.of(() -> client.target("https://api.github.com/search/users")
+
+        final String gitHubUrl = config.getProperty("github.search.url");
+
+        return Try.of(() -> client.target(gitHubUrl)
                 .queryParam("q", "location:" + location)
                 .queryParam("sort", "repositories")
                 .queryParam("per_page", perPage)
@@ -120,12 +138,18 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
 
     @PostConstruct
     private void postConstruct() {
-        int maxAttempts = Integer.parseInt(configuration.getProperty("retry.maxAttempts"));
-        int waitDuration = Integer.parseInt(configuration.getProperty("retry.waitDuration.millis"));
+        int maxAttempts = Integer.parseInt(config.getProperty("github.retry.maxAttempts"));
+        int waitDuration = Integer.parseInt(config.getProperty("github.retry.waitDuration.millis"));
 
         retryConfig = RetryConfig.custom()
                 .maxAttempts(maxAttempts)
                 .waitDuration(Duration.of(waitDuration, ChronoUnit.SECONDS))
+                .build();
+
+        int requestsPerMinute = Integer.parseInt(config.getProperty("github.search.requestsPerMinute"));
+        rateLimiterConfig = RateLimiterConfig.custom()
+                .timeoutDuration(Duration.ofMinutes(1))
+                .limitForPeriod(requestsPerMinute)
                 .build();
     }
 

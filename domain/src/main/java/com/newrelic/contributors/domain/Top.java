@@ -20,6 +20,8 @@ public @interface Top {
 
     int[] VALUES = {50, 100, 150};
 
+    int MIN_VALUE = Top.VALUES[0];
+
     int MAX_VALUE = Top.VALUES[Top.VALUES.length - 1];
 
     String message() default "Top parameter must be one of: 50, 100, 150";
