@@ -1,4 +1,4 @@
-package com.newrelic.contributors.domain;
+package com.newrelic.contributors.api;
 
 import lombok.Builder;
 import lombok.Value;

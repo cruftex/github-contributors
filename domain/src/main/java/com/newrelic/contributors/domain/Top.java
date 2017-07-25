@@ -18,7 +18,11 @@ import static java.lang.annotation.ElementType.*;
 @Target({FIELD, METHOD, PARAMETER, ANNOTATION_TYPE})
 public @interface Top {
 
-    String message() default "{com.newrelic.contributors.domain.Top.message}";
+    int[] VALUES = {50, 100, 150};
+
+    int MAX_VALUE = Top.VALUES[Top.VALUES.length - 1];
+
+    String message() default "Top parameter must be one of: 50, 100, 150";
 
     Class<?>[] groups() default {};
 
@@ -32,7 +36,7 @@ public @interface Top {
 
         @Override
         public boolean isValid(final Integer value, final ConstraintValidatorContext context) {
-            return IntStream.of(50, 100, 150).boxed().anyMatch(i -> i.equals(value));
+            return IntStream.of(VALUES).boxed().anyMatch(i -> i.equals(value));
         }
 
     }

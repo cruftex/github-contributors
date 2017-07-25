@@ -1,7 +1,5 @@
 package com.newrelic.contributors.api;
 
-import com.newrelic.contributors.domain.ContributorsError;
-
 import javax.inject.Singleton;
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.core.MediaType;

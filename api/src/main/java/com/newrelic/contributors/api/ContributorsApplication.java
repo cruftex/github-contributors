@@ -1,33 +1,27 @@
 package com.newrelic.contributors.api;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.servlet.ServletContainer;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+import java.util.HashSet;
+import java.util.Set;
 
-public class ContributorsApplication extends ResourceConfig {
+/**
+ * JAX-RS application defined as a CDI bean.
+ */
+@ApplicationPath("/")
+public class ContributorsApplication extends Application {
 
-    public static void main(String[] args) throws Exception {
+    private static final Set<Class<?>> appClasses = new HashSet<>();
 
-        ResourceConfig config = new ResourceConfig();
-        config.setApplicationName("GitHub Contributors");
-        config.packages("com.newrelic.contributors.api");
-        config.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
+    static {
+        appClasses.add(ContributorsResource.class);
+        appClasses.add(GenericExceptionMapper.class);
+        appClasses.add(ConstraintViolationMapper.class);
+    }
 
-        ServletHolder servlet = new ServletHolder(new ServletContainer(config));
-
-        Server server = new Server(8080);
-        ServletContextHandler context = new ServletContextHandler(server, "/*");
-        context.addServlet(servlet, "/*");
-
-        try {
-            server.start();
-            server.join();
-        } finally {
-            server.destroy();
-        }
+    @Override
+    public Set<Class<?>> getClasses() {
+        return appClasses;
     }
 
 }
