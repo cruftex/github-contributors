@@ -70,7 +70,7 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
 
         final CheckedFunction0<List> retriedResults =
                 Retry.decorateCheckedSupplier(retry,
-                        () -> retrieveTopContributors(key, Top.MAX, 1)
+                        () -> retrieveTopContributors(key, 100, 1)
                                 .getOrElseThrow(Function.identity()));
 
         final RateLimiter limiter = RateLimiter.of("GitHub - User Search", rateLimiterConfig);
@@ -96,7 +96,7 @@ class GitHubCacheLoader implements CacheLoader<String, List> {
         final Try<InputStream> body = response.flatMapTry(this::read);
 
         return body.mapTry(b -> (List) path.read(b)).onSuccess(r -> {
-            if (top == Top.MAX) { // GitHub max is 100
+            if (top == 100) { // GitHub max is 100
                 retrieveTopContributors(location, Top.MIN, 3)
                         .onSuccess(r::addAll);
             }

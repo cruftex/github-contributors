@@ -20,8 +20,9 @@ public class ContributorsService {
     public List findTopContributors(final String location, final int top) {
 
         logger.info("Finding the {} top contributors in {}", top, location);
-        return cache.get(location).subList(0, top);
-    }
 
+        final List result = cache.get(location);
+        return result.subList(0, Math.min(result.size(), top));
+    }
 
 }

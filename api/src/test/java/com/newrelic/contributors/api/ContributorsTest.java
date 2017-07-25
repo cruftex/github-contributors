@@ -28,9 +28,7 @@ public class ContributorsTest extends JerseyTest {
         weld.initialize();
 
         rule.stubFor(get(urlEqualTo("/search/users?q=location%3Abarcelona&" +
-                "sort=repositories&per_page=150&page=1"))
-                //.withQueryParam("q", equalTo("location%3Abarcelona"))
-                //.withQueryParam("sort", equalTo("repositories"))
+                "sort=repositories&per_page=100&page=1"))
                 .withHeader("Accept", equalTo("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -39,10 +37,28 @@ public class ContributorsTest extends JerseyTest {
                                 "  \"total_count\": 8651,\n" +
                                 "  \"incomplete_results\": false,\n" +
                                 "  \"items\": [\n" +
-                                "    {\n" +
+                                "      {\n" +
                                 "      \"login\": \"kristianmandrup\"\n" +
-                                "    }\n" +
+                                "      }\n" +
+                                "   ]\n" +
                                 "}")));
+
+        rule.stubFor(get(urlEqualTo("/search/users?q=location%3Abarcelona&" +
+                "sort=repositories&per_page=50&page=3"))
+                .withHeader("Accept", equalTo("application/json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\n" +
+                                "  \"total_count\": 8651,\n" +
+                                "  \"incomplete_results\": false,\n" +
+                                "  \"items\": [\n" +
+                                "      {\n" +
+                                "      \"login\": \"javix\"\n" +
+                                "      }\n" +
+                                "   ]\n" +
+                                "}")));
+
         super.setUp();
     }
 
@@ -69,7 +85,8 @@ public class ContributorsTest extends JerseyTest {
                 .get();
 
         assertEquals(200, response.getStatus());
-        assertEquals(String.format("Hello %s", "Josef"), response.readEntity(String.class));
+        assertEquals("[{\"login\":\"kristianmandrup\"},{\"login\":\"javix\"}]",
+                response.readEntity(String.class));
     }
 
 }
